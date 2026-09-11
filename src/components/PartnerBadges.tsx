@@ -32,6 +32,7 @@ export const PartnerBadges: React.FC = () => {
                 src={badge.src} 
                 alt={badge.alt} 
                 loading="lazy"
+                decoding="async"
                 className={`${badge.h} w-auto max-w-full object-contain mix-blend-multiply`}
               />
             </div>
@@ -58,6 +59,7 @@ export const PartnerBadges: React.FC = () => {
                   src={badge.src} 
                   alt={badge.alt} 
                   loading="lazy"
+                  decoding="async"
                   className={`${badge.h} w-auto object-contain mix-blend-multiply`}
                 />
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MoveRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -20,27 +20,9 @@ interface ServiceItem {
   image: string;
 }
 
-const serviceImages = [
-  service01Img,
-  service02Img,
-  service03Img,
-  service04Img,
-  service05Img,
-  service06Img,
-  service07Img,
-];
-
 export const Services: React.FC = () => {
   // Default open first item (01) as seen in the reference screenshot
   const [openId, setOpenId] = useState<string | null>('01');
-
-  // Preload all service images on mount so accordion switches never flicker
-  useEffect(() => {
-    serviceImages.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, []);
 
   const servicesData: ServiceItem[] = [
     {

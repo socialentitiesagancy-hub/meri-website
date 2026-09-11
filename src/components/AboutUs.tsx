@@ -32,6 +32,7 @@ export const AboutUs: React.FC = () => {
                   src={ourStoryTeamImg}
                   alt="Social Entities Creative Team"
                   loading="lazy"
+                  decoding="async"
                   className="w-full h-auto object-contain mix-blend-multiply"
                   style={{ 
                     filter: 'contrast(1.35) brightness(1.15)',

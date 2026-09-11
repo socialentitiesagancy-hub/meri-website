@@ -22,6 +22,8 @@ export const ServicesHero: React.FC = () => {
               src={worldMapImg}
               alt="Global Presence World Map"
               referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
               className="w-full h-auto object-contain rounded-xl"
             />
           </div>

@@ -38,6 +38,7 @@ const BrandLogoCard: React.FC<{ brand: Brand }> = ({ brand }) => {
           src={brand.imageUrl}
           alt={brand.name}
           loading="lazy"
+          decoding="async"
           referrerPolicy="no-referrer"
           onError={() => setImgError(true)}
           className="h-14 sm:h-16 md:h-18 max-w-[200px] sm:max-w-[240px] w-auto object-contain transition-transform duration-300 group-hover:scale-105"

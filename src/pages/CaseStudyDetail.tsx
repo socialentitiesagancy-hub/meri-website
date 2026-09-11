@@ -132,6 +132,8 @@ export const CaseStudyDetail: React.FC = () => {
           <img
             src={study.coverImage}
             alt={study.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-[320px] sm:h-[480px] object-cover"
           />
         </div>

@@ -33,6 +33,7 @@ export const Achievements: React.FC = () => {
               alt="Our Achievements Growth Arrow Graphic"
               referrerPolicy="no-referrer"
               loading="lazy"
+              decoding="async"
               className="w-full h-auto object-contain transition-transform duration-300 hover:scale-[1.01]"
             />
           </div>

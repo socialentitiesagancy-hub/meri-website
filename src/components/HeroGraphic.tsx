@@ -12,6 +12,7 @@ export const HeroGraphic: React.FC = () => {
           referrerPolicy="no-referrer"
           fetchPriority="high"
           loading="eager"
+          decoding="async"
           className="w-full h-auto object-contain transition-all duration-300 hover:scale-[1.01]"
         />
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import strategyImg from '../assets/images/hero_marketing_woman_1785151053923.jpg';
 import calendarImg from '../assets/images/service_05_content_1785159289967.jpg';
@@ -13,18 +13,8 @@ interface ProcessStep {
   image: string;
 }
 
-const processImages = [strategyImg, calendarImg, implementationImg, reportingImg];
-
 export const WorkingProcess: React.FC = () => {
   const [activeStepId, setActiveStepId] = useState<string>('01');
-
-  // Preload process images to prevent any image loading delay or flicker
-  useEffect(() => {
-    processImages.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, []);
 
   const steps: ProcessStep[] = [
     {
