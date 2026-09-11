@@ -1,0 +1,6 @@
+{
+  "name": "Social Entities Agency",
+  "description": "Full-service digital agency website for Social Entities featuring marketing consultation, SEO, performance marketing, design, and IT solutions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
