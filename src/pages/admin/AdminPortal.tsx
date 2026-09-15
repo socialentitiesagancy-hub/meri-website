@@ -27,7 +27,8 @@ import {
   Image as ImageIcon,
   Share2,
   BookOpen,
-  ArrowUpRight
+  ArrowUpRight,
+  Mail
 } from 'lucide-react';
 import { CaseStudy } from '../../types/caseStudy';
 import { BlogPost } from '../../types/blog';
@@ -47,9 +48,13 @@ import {
   clearAllBlogs,
   MAX_BLOGS
 } from '../../services/blogStorage';
+import {
+  fetchAdminSession,
+  logoutAdmin,
+  requestAdminOtp,
+  verifyAdminOtp,
+} from '../../services/adminAuth';
 import { GmailRichEditor } from '../../components/admin/GmailRichEditor';
-
-const ADMIN_SESSION_KEY = 'se_admin_logged_in';
 
 const CATEGORIES = [
   'Performance Marketing',
@@ -84,8 +89,13 @@ const PRESET_COVERS = [
 
 export const AdminPortal: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [authChecking, setAuthChecking] = useState(true);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [challengeToken, setChallengeToken] = useState('');
+  const [authStep, setAuthStep] = useState<'email' | 'otp'>('email');
+  const [authLoading, setAuthLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
 
   // Top Section Switcher: 'cases' or 'blogs'
@@ -132,13 +142,27 @@ export const AdminPortal: React.FC = () => {
 
   const [notification, setNotification] = useState<string>('');
 
-  // Check existing session
+  // Check existing signed session cookie
   useEffect(() => {
-    const session = sessionStorage.getItem(ADMIN_SESSION_KEY) || localStorage.getItem(ADMIN_SESSION_KEY);
-    if (session === 'true') {
-      setIsAuthenticated(true);
-      loadAllData();
-    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const session = await fetchAdminSession();
+        if (cancelled) return;
+        if (session.authenticated) {
+          setIsAuthenticated(true);
+          setAdminEmail(session.email || '');
+          loadAllData();
+        }
+      } catch {
+        // stay logged out
+      } finally {
+        if (!cancelled) setAuthChecking(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const showToast = (msg: string) => {
@@ -151,24 +175,68 @@ export const AdminPortal: React.FC = () => {
     setBlogs(getStoredBlogs());
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim() === 'admin' && password.trim() === 'admin') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
-      localStorage.setItem(ADMIN_SESSION_KEY, 'true');
-      setLoginError('');
-      loadAllData();
-      showToast('Welcome back, Admin!');
-    } else {
-      setLoginError('Invalid username or password. Please use admin / admin.');
+    setLoginError('');
+    setAuthLoading(true);
+    try {
+      const result = await requestAdminOtp(email);
+      if (!result.ok) {
+        setLoginError(result.error || 'Failed to send code');
+        return;
+      }
+      if (!result.challengeToken) {
+        // Email not allowlisted — still show OTP step with generic message
+        setLoginError('If this email is authorized, a code was sent. Check your inbox.');
+        return;
+      }
+      setChallengeToken(result.challengeToken);
+      setAuthStep('otp');
+      showToast('Verification code sent to your email');
+    } catch {
+      setLoginError('Unable to reach auth server. Use `vercel dev` for local API + SMTP.');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setAuthLoading(true);
+    try {
+      const result = await verifyAdminOtp({
+        email,
+        otp,
+        challengeToken,
+      });
+      if (!result.ok) {
+        setLoginError(result.error || 'Invalid code');
+        return;
+      }
+      setIsAuthenticated(true);
+      setAdminEmail(result.email || email);
+      loadAllData();
+      showToast('Welcome back, Admin!');
+    } catch {
+      setLoginError('Verification failed. Try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutAdmin();
+    } catch {
+      // ignore network errors on logout
+    }
     setIsAuthenticated(false);
-    sessionStorage.removeItem(ADMIN_SESSION_KEY);
-    localStorage.removeItem(ADMIN_SESSION_KEY);
+    setAdminEmail('');
+    setEmail('');
+    setOtp('');
+    setChallengeToken('');
+    setAuthStep('email');
     setIsEditingCase(false);
     setIsEditingBlog(false);
   };
@@ -412,6 +480,14 @@ export const AdminPortal: React.FC = () => {
   };
 
   // 1. Render Login Screen
+  if (authChecking) {
+    return (
+      <main className="min-h-[85vh] flex items-center justify-center bg-stone-100/80 px-4 py-12">
+        <div className="text-sm font-semibold text-stone-500">Checking secure session…</div>
+      </main>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <main className="min-h-[85vh] flex items-center justify-center bg-stone-100/80 px-4 py-12">
@@ -424,14 +500,14 @@ export const AdminPortal: React.FC = () => {
 
           <div className="inline-flex items-center gap-1.5 justify-center w-full mb-2 text-xs font-bold uppercase tracking-wider text-[#5B6A50]">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Authorized Management</span>
+            <span>Email OTP Access</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-center text-[#0F1A34] mb-2 tracking-tight">
             Agency CRM & Content Portal
           </h1>
           <p className="text-center text-xs sm:text-sm text-stone-500 mb-8 leading-relaxed">
-            Manage your website Case Studies and LinkedIn Blog cards.
+            Sign in with your authorized email. A one-time code will be sent via SMTP.
           </p>
 
           {loginError && (
@@ -440,45 +516,80 @@ export const AdminPortal: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">
-                Username
-              </label>
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
-                className="w-full px-4 py-3 rounded-xl border border-stone-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#5B6A50]"
-              />
-            </div>
+          {authStep === 'email' ? (
+            <form onSubmit={handleRequestOtp} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">
+                  Admin Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@yourdomain.com"
+                  className="w-full px-4 py-3 rounded-xl border border-stone-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#5B6A50]"
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="admin"
-                className="w-full px-4 py-3 rounded-xl border border-stone-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#5B6A50]"
-              />
-            </div>
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full bg-[#5B6A50] hover:bg-[#4d5c43] disabled:opacity-60 text-white py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm active:scale-98 mt-2 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Mail className="w-4 h-4" />
+                {authLoading ? 'Sending code…' : 'Send Login Code'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  required
+                  autoComplete="one-time-code"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="6-digit code"
+                  className="w-full px-4 py-3 rounded-xl border border-stone-300 text-sm tracking-[0.35em] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[#5B6A50]"
+                />
+                <p className="mt-2 text-[11px] text-stone-500 text-center">
+                  Sent to <strong className="text-stone-700">{email}</strong>
+                </p>
+              </div>
 
-            <button
-              type="submit"
-              className="w-full bg-[#5B6A50] hover:bg-[#4d5c43] text-white py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm active:scale-98 mt-2 cursor-pointer"
-            >
-              Sign In to CRM Portal
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={authLoading || otp.length !== 6}
+                className="w-full bg-[#5B6A50] hover:bg-[#4d5c43] disabled:opacity-60 text-white py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm active:scale-98 mt-2 cursor-pointer"
+              >
+                {authLoading ? 'Verifying…' : 'Verify & Sign In'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthStep('email');
+                  setOtp('');
+                  setChallengeToken('');
+                  setLoginError('');
+                }}
+                className="w-full text-xs font-semibold text-stone-500 hover:text-[#5B6A50] py-2"
+              >
+                Use a different email
+              </button>
+            </form>
+          )}
 
           <div className="mt-8 pt-6 border-t border-stone-100 flex items-center justify-between text-xs text-stone-400">
-            <span>Access: <strong className="text-stone-600">admin</strong> / <strong className="text-stone-600">admin</strong></span>
+            <span>Secure SMTP email OTP</span>
             <Link to="/" className="hover:text-[#5B6A50] font-semibold transition-colors">
               &larr; Back to Website
             </Link>
@@ -510,9 +621,9 @@ export const AdminPortal: React.FC = () => {
               <h2 className="text-base font-black text-[#0F1A34] leading-tight">
                 Social Entities CRM Studio
               </h2>
-              <span className="text-[11px] font-semibold text-stone-500">
-                Content Management Panel
-              </span>
+              <p className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate max-w-[220px] sm:max-w-none">
+                {adminEmail || 'Content Management Panel'}
+              </p>
             </div>
           </div>
 

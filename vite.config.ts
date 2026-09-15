@@ -17,6 +17,13 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      // Proxy API to `vercel dev` (default 3001) when testing auth locally.
+      proxy: {
+        '/api': {
+          target: process.env.VERCEL_DEV_URL || 'http://127.0.0.1:3001',
+          changeOrigin: true,
+        },
+      },
     },
   };
 });

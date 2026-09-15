@@ -22,5 +22,11 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "api",
+    "node_modules",
+    "dist",
+    "scripts"
+  ]
 }
