@@ -1,5 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import {
+const {
   allowCors,
   createSessionToken,
   isEmailAllowed,
@@ -9,19 +8,15 @@ import {
   sendJson,
   setSessionCookie,
   verifyChallengeToken,
-} from '../_lib/auth';
+} = require('../_lib/auth.js');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   allowCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
 
   try {
-    const { email, otp, challengeToken } = readJsonBody<{
-      email?: string;
-      otp?: string;
-      challengeToken?: string;
-    }>(req);
+    const { email, otp, challengeToken } = readJsonBody(req);
 
     if (!email || !otp || !challengeToken) {
       return sendJson(res, 400, { error: 'Email, code, and challenge token are required' });
@@ -39,8 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const forwarded = req.headers['x-forwarded-for'];
     const ip =
-      (typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : undefined) ||
-      'unknown';
+      (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : undefined) || 'unknown';
     if (!rateLimit(`verify:${ip}:${normalized}`, 10, 15 * 60 * 1000)) {
       return sendJson(res, 429, { error: 'Too many attempts. Try again later.' });
     }
@@ -62,4 +56,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('verify-otp error', err);
     return sendJson(res, 500, { error: 'Verification failed' });
   }
-}
+};

@@ -1,12 +1,12 @@
-import nodemailer from 'nodemailer';
+const nodemailer = require('nodemailer');
 
-function requireEnv(name: string): string {
+function requireEnv(name) {
   const value = process.env[name];
   if (!value) throw new Error(`${name} is not configured`);
   return value;
 }
 
-export async function sendOtpEmail(to: string, otp: string): Promise<void> {
+async function sendOtpEmail(to, otp) {
   const host = requireEnv('SMTP_HOST');
   const port = Number(process.env.SMTP_PORT || '587');
   const user = requireEnv('SMTP_USER');
@@ -35,3 +35,5 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
     `,
   });
 }
+
+module.exports = { sendOtpEmail };

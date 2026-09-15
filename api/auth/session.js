@@ -1,13 +1,12 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import {
+const {
   SESSION_COOKIE,
   allowCors,
   parseCookies,
   sendJson,
   verifySessionToken,
-} from '../_lib/auth';
+} = require('../_lib/auth.js');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   allowCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
@@ -23,4 +22,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('session error', err);
     return sendJson(res, 500, { authenticated: false, error: 'Session check failed' });
   }
-}
+};

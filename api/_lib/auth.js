@@ -1,11 +1,10 @@
-import crypto from 'crypto';
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+const crypto = require('crypto');
 
-export const SESSION_COOKIE = 'se_admin_session';
-export const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
-export const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const SESSION_COOKIE = 'se_admin_session';
+const OTP_TTL_MS = 10 * 60 * 1000;
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
-function getSecret(): string {
+function getSecret() {
   const secret = process.env.AUTH_SECRET;
   if (!secret || secret.length < 16) {
     throw new Error('AUTH_SECRET must be set (min 16 characters)');
@@ -13,36 +12,35 @@ function getSecret(): string {
   return secret;
 }
 
-export function getAllowedEmails(): string[] {
-  const raw = process.env.ADMIN_EMAILS || '';
-  return raw
+function getAllowedEmails() {
+  return String(process.env.ADMIN_EMAILS || '')
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
 }
 
-export function isEmailAllowed(email: string): boolean {
+function isEmailAllowed(email) {
   const allowed = getAllowedEmails();
   if (allowed.length === 0) return false;
-  return allowed.includes(email.trim().toLowerCase());
+  return allowed.includes(String(email).trim().toLowerCase());
 }
 
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
+function normalizeEmail(email) {
+  return String(email).trim().toLowerCase();
 }
 
-export function generateOtp(): string {
+function generateOtp() {
   return String(crypto.randomInt(100000, 999999));
 }
 
-export function hashOtp(otp: string, email: string): string {
+function hashOtp(otp, email) {
   return crypto
     .createHmac('sha256', getSecret())
     .update(`${normalizeEmail(email)}:${otp}`)
     .digest('hex');
 }
 
-function b64url(input: string | Buffer): string {
+function b64url(input) {
   return Buffer.from(input)
     .toString('base64')
     .replace(/\+/g, '-')
@@ -50,17 +48,17 @@ function b64url(input: string | Buffer): string {
     .replace(/=+$/g, '');
 }
 
-function fromB64url(input: string): Buffer {
+function fromB64url(input) {
   const padded = input.replace(/-/g, '+').replace(/_/g, '/');
   const pad = padded.length % 4 === 0 ? '' : '='.repeat(4 - (padded.length % 4));
   return Buffer.from(padded + pad, 'base64');
 }
 
-function sign(payloadB64: string): string {
+function sign(payloadB64) {
   return b64url(crypto.createHmac('sha256', getSecret()).update(payloadB64).digest());
 }
 
-export function createChallengeToken(email: string, otp: string): string {
+function createChallengeToken(email, otp) {
   const payload = {
     email: normalizeEmail(email),
     otpHash: hashOtp(otp, email),
@@ -70,12 +68,8 @@ export function createChallengeToken(email: string, otp: string): string {
   return `${payloadB64}.${sign(payloadB64)}`;
 }
 
-export function verifyChallengeToken(
-  token: string,
-  email: string,
-  otp: string
-): { ok: true } | { ok: false; error: string } {
-  const parts = token.split('.');
+function verifyChallengeToken(token, email, otp) {
+  const parts = String(token || '').split('.');
   if (parts.length !== 2) return { ok: false, error: 'Invalid challenge token' };
 
   const [payloadB64, sig] = parts;
@@ -86,7 +80,7 @@ export function verifyChallengeToken(
     return { ok: false, error: 'Invalid challenge token' };
   }
 
-  let payload: { email: string; otpHash: string; exp: number };
+  let payload;
   try {
     payload = JSON.parse(fromB64url(payloadB64).toString('utf8'));
   } catch {
@@ -113,7 +107,7 @@ export function verifyChallengeToken(
   return { ok: true };
 }
 
-export function createSessionToken(email: string): string {
+function createSessionToken(email) {
   const payload = {
     email: normalizeEmail(email),
     exp: Date.now() + SESSION_TTL_MS,
@@ -122,11 +116,9 @@ export function createSessionToken(email: string): string {
   return `${payloadB64}.${sign(payloadB64)}`;
 }
 
-export function verifySessionToken(
-  token: string | undefined
-): { ok: true; email: string } | { ok: false } {
+function verifySessionToken(token) {
   if (!token) return { ok: false };
-  const parts = token.split('.');
+  const parts = String(token).split('.');
   if (parts.length !== 2) return { ok: false };
   const [payloadB64, sig] = parts;
   const expected = sign(payloadB64);
@@ -135,10 +127,7 @@ export function verifySessionToken(
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return { ok: false };
 
   try {
-    const payload = JSON.parse(fromB64url(payloadB64).toString('utf8')) as {
-      email: string;
-      exp: number;
-    };
+    const payload = JSON.parse(fromB64url(payloadB64).toString('utf8'));
     if (!payload.email || !payload.exp || Date.now() > payload.exp) return { ok: false };
     if (!isEmailAllowed(payload.email)) return { ok: false };
     return { ok: true, email: payload.email };
@@ -147,7 +136,7 @@ export function verifySessionToken(
   }
 }
 
-export function parseCookies(req: VercelRequest): Record<string, string> {
+function parseCookies(req) {
   const header = req.headers.cookie;
   if (!header) return {};
   return Object.fromEntries(
@@ -158,7 +147,7 @@ export function parseCookies(req: VercelRequest): Record<string, string> {
   );
 }
 
-export function setSessionCookie(res: VercelResponse, token: string) {
+function setSessionCookie(res, token) {
   const secure = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
   const maxAge = Math.floor(SESSION_TTL_MS / 1000);
   const parts = [
@@ -172,31 +161,34 @@ export function setSessionCookie(res: VercelResponse, token: string) {
   res.setHeader('Set-Cookie', parts.join('; '));
 }
 
-export function clearSessionCookie(res: VercelResponse) {
+function clearSessionCookie(res) {
   const secure = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
-  const parts = [
-    `${SESSION_COOKIE}=`,
-    'Path=/',
-    'HttpOnly',
-    'SameSite=Lax',
-    'Max-Age=0',
-  ];
+  const parts = [`${SESSION_COOKIE}=`, 'Path=/', 'HttpOnly', 'SameSite=Lax', 'Max-Age=0'];
   if (secure) parts.push('Secure');
   res.setHeader('Set-Cookie', parts.join('; '));
 }
 
-export function readJsonBody<T>(req: VercelRequest): T {
+function readJsonBody(req) {
   if (typeof req.body === 'string') {
-    return JSON.parse(req.body || '{}') as T;
+    try {
+      return JSON.parse(req.body || '{}');
+    } catch {
+      return {};
+    }
   }
-  return (req.body || {}) as T;
+  return req.body || {};
 }
 
-export function sendJson(res: VercelResponse, status: number, body: unknown) {
-  res.status(status).setHeader('Content-Type', 'application/json').json(body);
+function sendJson(res, status, body) {
+  if (typeof res.status === 'function') {
+    return res.status(status).json(body);
+  }
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(body));
 }
 
-export function allowCors(req: VercelRequest, res: VercelResponse) {
+function allowCors(req, res) {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -204,10 +196,9 @@ export function allowCors(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-/** Simple per-instance rate limit (best-effort on serverless). */
-const hits = new Map<string, { count: number; resetAt: number }>();
+const hits = new Map();
 
-export function rateLimit(key: string, limit = 5, windowMs = 15 * 60 * 1000): boolean {
+function rateLimit(key, limit = 5, windowMs = 15 * 60 * 1000) {
   const now = Date.now();
   const row = hits.get(key);
   if (!row || now > row.resetAt) {
@@ -218,3 +209,22 @@ export function rateLimit(key: string, limit = 5, windowMs = 15 * 60 * 1000): bo
   row.count += 1;
   return true;
 }
+
+module.exports = {
+  SESSION_COOKIE,
+  getAllowedEmails,
+  isEmailAllowed,
+  normalizeEmail,
+  generateOtp,
+  createChallengeToken,
+  verifyChallengeToken,
+  createSessionToken,
+  verifySessionToken,
+  parseCookies,
+  setSessionCookie,
+  clearSessionCookie,
+  readJsonBody,
+  sendJson,
+  allowCors,
+  rateLimit,
+};
