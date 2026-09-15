@@ -37,13 +37,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return sendJson(res, 401, { error: 'Unauthorized email' });
     }
 
-    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || 'unknown';
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip =
+      (typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : undefined) ||
+      'unknown';
     if (!rateLimit(`verify:${ip}:${normalized}`, 10, 15 * 60 * 1000)) {
       return sendJson(res, 429, { error: 'Too many attempts. Try again later.' });
     }
 
     const result = verifyChallengeToken(challengeToken, normalized, code);
-    if (!result.ok) {
+    if (result.ok === false) {
       return sendJson(res, 401, { error: result.error });
     }
 

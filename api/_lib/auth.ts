@@ -57,7 +57,7 @@ function fromB64url(input: string): Buffer {
 }
 
 function sign(payloadB64: string): string {
-  return crypto.createHmac('sha256', getSecret()).update(payloadB64).digest('base64url');
+  return b64url(crypto.createHmac('sha256', getSecret()).update(payloadB64).digest());
 }
 
 export function createChallengeToken(email: string, otp: string): string {

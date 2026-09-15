@@ -31,7 +31,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip =
+      (typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : undefined) ||
+      'unknown';
     if (!rateLimit(`otp:${ip}:${normalized}`, 5, 15 * 60 * 1000)) {
       return sendJson(res, 429, { error: 'Too many requests. Try again later.' });
     }
