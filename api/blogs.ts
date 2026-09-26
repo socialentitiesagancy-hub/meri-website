@@ -1,12 +1,14 @@
-import { put, head, del } from '@vercel/blob';
+import { put, list } from '@vercel/blob';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const BLOB_KEY = 'data/blogs.json';
 
 async function readBlob(): Promise<unknown[]> {
   try {
-    const info = await head(BLOB_KEY);
-    const res = await fetch(info.url);
+    const { blobs } = await list({ prefix: BLOB_KEY });
+    if (!blobs.length) return [];
+    const res = await fetch(blobs[0].url);
+    if (!res.ok) return [];
     return await res.json();
   } catch {
     return [];
