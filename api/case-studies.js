@@ -29,6 +29,8 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  try {
+
   if (req.method === 'GET') {
     const studies = await readBlob();
     return res.status(200).json(studies);
@@ -57,5 +59,9 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(all);
   }
 
-  return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
+  } catch (err) {
+    console.error('case-studies handler error:', err);
+    return res.status(500).json({ error: err.message || String(err) });
+  }
 };
