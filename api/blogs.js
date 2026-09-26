@@ -1,9 +1,8 @@
-import { put, list } from '@vercel/blob';
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+const { put, list } = require('@vercel/blob');
 
 const BLOB_KEY = 'data/blogs.json';
 
-async function readBlob(): Promise<unknown[]> {
+async function readBlob() {
   try {
     const { blobs } = await list({ prefix: BLOB_KEY });
     if (!blobs.length) return [];
@@ -15,7 +14,7 @@ async function readBlob(): Promise<unknown[]> {
   }
 }
 
-async function writeBlob(data: unknown[]) {
+async function writeBlob(data) {
   await put(BLOB_KEY, JSON.stringify(data), {
     access: 'public',
     contentType: 'application/json',
@@ -23,7 +22,7 @@ async function writeBlob(data: unknown[]) {
   });
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -31,25 +30,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'GET') {
     const blogs = await readBlob();
-    return res.json(blogs);
+    return res.status(200).json(blogs);
   }
 
   if (req.method === 'POST') {
     const blog = req.body;
-    const all = await readBlob() as { id: string }[];
+    const all = await readBlob();
     const idx = all.findIndex((b) => b.id === blog.id);
     if (idx >= 0) all[idx] = blog;
     else all.unshift(blog);
     await writeBlob(all);
-    return res.json(all);
+    return res.status(200).json(all);
   }
 
   if (req.method === 'DELETE') {
     const { id } = req.body;
-    const all = (await readBlob() as { id: string }[]).filter((b) => b.id !== id);
+    const all = (await readBlob()).filter((b) => b.id !== id);
     await writeBlob(all);
-    return res.json(all);
+    return res.status(200).json(all);
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
-}
+};

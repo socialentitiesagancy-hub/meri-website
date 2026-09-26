@@ -8,6 +8,12 @@
   "functions": {
     "api/auth/*.js": {
       "includeFiles": "api/**"
+    },
+    "api/blogs.js": {
+      "maxDuration": 10
+    },
+    "api/case-studies.js": {
+      "maxDuration": 10
     }
   }
 }
