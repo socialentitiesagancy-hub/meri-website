@@ -170,9 +170,10 @@ export const AdminPortal: React.FC = () => {
     setTimeout(() => setNotification(''), 3500);
   };
 
-  const loadAllData = () => {
-    setCaseStudies(getStoredCaseStudies());
-    setBlogs(getStoredBlogs());
+  const loadAllData = async () => {
+    const [cases, blogList] = await Promise.all([getStoredCaseStudies(), getStoredBlogs()]);
+    setCaseStudies(cases);
+    setBlogs(blogList);
   };
 
   const handleRequestOtp = async (e: React.FormEvent) => {
@@ -283,7 +284,7 @@ export const AdminPortal: React.FC = () => {
     }
   };
 
-  const handleSaveBlog = (e: React.FormEvent) => {
+  const handleSaveBlog = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!blogTitle.trim()) {
       alert('Please enter a blog title.');
@@ -307,21 +308,21 @@ export const AdminPortal: React.FC = () => {
       isPublished: blogIsPublished,
     };
 
-    const res = saveBlog(newOrUpdatedBlog);
+    const res = await saveBlog(newOrUpdatedBlog);
     if (!res.success) {
       alert(res.message);
       return;
     }
 
-    setBlogs(getStoredBlogs());
+    setBlogs(await getStoredBlogs());
     setIsEditingBlog(false);
     showToast(editingBlogId ? 'Blog card updated!' : 'New LinkedIn blog card published!');
   };
 
-  const handleDeleteBlog = (id: string, titleStr: string) => {
+  const handleDeleteBlog = async (id: string, titleStr: string) => {
     if (window.confirm(`Permanently delete blog "${titleStr}"? This will remove it completely and it will not stay in your code base.`)) {
-      deleteBlog(id);
-      setBlogs(getStoredBlogs());
+      await deleteBlog(id);
+      setBlogs(await getStoredBlogs());
       if (isEditingBlog && editingBlogId === id) {
         setIsEditingBlog(false);
       }
@@ -329,15 +330,15 @@ export const AdminPortal: React.FC = () => {
     }
   };
 
-  const handleToggleBlogPublish = (id: string) => {
-    toggleBlogPublishStatus(id);
-    setBlogs(getStoredBlogs());
+  const handleToggleBlogPublish = async (id: string) => {
+    await toggleBlogPublishStatus(id);
+    setBlogs(await getStoredBlogs());
     showToast('Blog status updated.');
   };
 
-  const handleClearAllBlogs = () => {
+  const handleClearAllBlogs = async () => {
     if (window.confirm('Permanently clear all blogs and reset to scratch (0 blogs)? Nothing will stay in your code base.')) {
-      clearAllBlogs();
+      await clearAllBlogs();
       setBlogs([]);
       if (isEditingBlog) {
         setIsEditingBlog(false);
@@ -422,7 +423,7 @@ export const AdminPortal: React.FC = () => {
     setIsEditingCase(true);
   };
 
-  const handleSaveCase = (e: React.FormEvent) => {
+  const handleSaveCase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!caseTitle.trim()) {
       alert('Please enter a title.');
@@ -446,21 +447,21 @@ export const AdminPortal: React.FC = () => {
       author: 'Social Entities Team',
     };
 
-    const res = saveCaseStudy(newOrUpdatedStudy);
+    const res = await saveCaseStudy(newOrUpdatedStudy);
     if (!res.success) {
       alert(res.message);
       return;
     }
 
-    setCaseStudies(getStoredCaseStudies());
+    setCaseStudies(await getStoredCaseStudies());
     setIsEditingCase(false);
     showToast(editingCaseId ? 'Case study updated!' : 'Case study published!');
   };
 
-  const handleDeleteCaseStudy = (id: string, titleStr: string) => {
+  const handleDeleteCaseStudy = async (id: string, titleStr: string) => {
     if (window.confirm(`Permanently delete case study "${titleStr}"? This cannot be undone.`)) {
-      deleteCaseStudy(id);
-      setCaseStudies(getStoredCaseStudies());
+      await deleteCaseStudy(id);
+      setCaseStudies(await getStoredCaseStudies());
       if (isEditingCase && editingCaseId === id) {
         setIsEditingCase(false);
       }
@@ -468,9 +469,9 @@ export const AdminPortal: React.FC = () => {
     }
   };
 
-  const handleClearAllCaseStudies = () => {
+  const handleClearAllCaseStudies = async () => {
     if (window.confirm('Permanently delete all case studies and reset to 0 from scratch?')) {
-      clearAllCaseStudies();
+      await clearAllCaseStudies();
       setCaseStudies([]);
       if (isEditingCase) {
         setIsEditingCase(false);

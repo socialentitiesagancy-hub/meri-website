@@ -1,75 +1,82 @@
 import { CaseStudy } from '../types/caseStudy';
 
-const STORAGE_KEY = 'se_case_studies_db_v2';
+const API = '/api/case-studies';
+const LS_KEY = 'se_case_studies_cache';
 export const MAX_CASE_STUDIES = 6;
 
-// Scratch initialization - no demo seed data by default
-export const initialCaseStudiesSeed: CaseStudy[] = [];
+function lsGet(): CaseStudy[] {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
+}
+function lsSet(studies: CaseStudy[]) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(studies)); } catch {}
+}
 
-export function getStoredCaseStudies(): CaseStudy[] {
+export async function getStoredCaseStudies(): Promise<CaseStudy[]> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      // Return empty scratch array
-      return [];
+    const res = await fetch(API);
+    if (!res.ok) throw new Error();
+    const studies: CaseStudy[] = await res.json();
+    lsSet(studies);
+    return studies;
+  } catch {
+    return lsGet();
+  }
+}
+
+export async function saveCaseStudy(
+  study: CaseStudy
+): Promise<{ success: boolean; data: CaseStudy[]; message?: string }> {
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(study),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Save failed' }));
+      return { success: false, data: lsGet(), message: err.error };
     }
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.slice(0, MAX_CASE_STUDIES);
+    const data: CaseStudy[] = await res.json();
+    lsSet(data);
+    return { success: true, data };
   } catch (err) {
-    console.error('Failed to load case studies from localStorage', err);
-    return [];
+    return { success: false, data: lsGet(), message: String(err) };
   }
 }
 
-export function saveCaseStudy(study: CaseStudy): { success: boolean; data: CaseStudy[]; message?: string } {
-  const current = getStoredCaseStudies();
-  const existingIndex = current.findIndex((c) => c.id === study.id);
-
-  if (existingIndex < 0 && current.length >= MAX_CASE_STUDIES) {
-    return {
-      success: false,
-      data: current,
-      message: `Maximum limit of ${MAX_CASE_STUDIES} case studies reached. Please edit or remove an existing case study to publish a new one.`,
-    };
+export async function deleteCaseStudy(id: string): Promise<CaseStudy[]> {
+  try {
+    const res = await fetch(API, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) throw new Error();
+    const data: CaseStudy[] = await res.json();
+    lsSet(data);
+    return data;
+  } catch {
+    return lsGet();
   }
-
-  let updated: CaseStudy[];
-  if (existingIndex >= 0) {
-    updated = [...current];
-    updated[existingIndex] = study;
-  } else {
-    updated = [study, ...current];
-  }
-
-  // Ensure strict limit of 6
-  updated = updated.slice(0, MAX_CASE_STUDIES);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  return { success: true, data: updated };
 }
 
-export function deleteCaseStudy(id: string): CaseStudy[] {
-  const current = getStoredCaseStudies();
-  const updated = current.filter((c) => c.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  return updated;
+export async function togglePublishStatus(id: string): Promise<CaseStudy[]> {
+  const all = await getStoredCaseStudies();
+  const study = all.find((c) => c.id === id);
+  if (!study) return all;
+  return (await saveCaseStudy({ ...study, isPublished: !study.isPublished })).data;
 }
 
-export function togglePublishStatus(id: string): CaseStudy[] {
-  const current = getStoredCaseStudies();
-  const updated = current.map((c) => (c.id === id ? { ...c, isPublished: !c.isPublished } : c));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  return updated;
+export async function getCaseStudyBySlug(slug: string): Promise<CaseStudy | undefined> {
+  const all = await getStoredCaseStudies();
+  return all.find((c) => c.slug.toLowerCase() === slug.toLowerCase());
 }
 
-export function getCaseStudyBySlug(slug: string): CaseStudy | undefined {
-  const current = getStoredCaseStudies();
-  return current.find((c) => c.slug.toLowerCase() === slug.toLowerCase());
-}
-
-export function clearAllCaseStudies(): CaseStudy[] {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+export async function clearAllCaseStudies(): Promise<CaseStudy[]> {
+  const all = await getStoredCaseStudies();
+  await Promise.all(all.map((c) => deleteCaseStudy(c.id)));
+  lsSet([]);
   return [];
 }
+
+export const initialCaseStudiesSeed: CaseStudy[] = [];

@@ -18,8 +18,7 @@ export const Blogs: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
   useEffect(() => {
-    const list = getStoredBlogs().filter((b) => b.isPublished);
-    setBlogs(list);
+    getStoredBlogs().then((list) => setBlogs(list.filter((b) => b.isPublished)));
   }, []);
 
   const categories = [

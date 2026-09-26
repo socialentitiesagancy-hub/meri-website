@@ -9,8 +9,7 @@ export const CaseStudies: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
   useEffect(() => {
-    const list = getStoredCaseStudies().filter((c) => c.isPublished);
-    setCaseStudies(list);
+    getStoredCaseStudies().then((list) => setCaseStudies(list.filter((c) => c.isPublished)));
   }, []);
 
   const categories = [

@@ -18,20 +18,29 @@ export const CaseStudyDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [study, setStudy] = useState<CaseStudy | null>(null);
+  const [relatedStudies, setRelatedStudies] = useState<CaseStudy[]>([]);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (slug) {
-      const found = getCaseStudyBySlug(slug);
-      if (found) {
-        setStudy(found);
-      } else {
-        // Fallback to first study or redirect
-        const all = getStoredCaseStudies();
-        if (all.length > 0) {
-          setStudy(all[0]);
+      getCaseStudyBySlug(slug).then((found) => {
+        const loadRelated = (current: CaseStudy) => {
+          getStoredCaseStudies().then((all) => {
+            setRelatedStudies(all.filter((c) => c.id !== current.id && c.isPublished).slice(0, 2));
+          });
+        };
+        if (found) {
+          setStudy(found);
+          loadRelated(found);
+        } else {
+          getStoredCaseStudies().then((all) => {
+            if (all.length > 0) {
+              setStudy(all[0]);
+              setRelatedStudies(all.slice(1, 3).filter((c) => c.isPublished));
+            }
+          });
         }
-      }
+      });
     }
   }, [slug]);
 
@@ -58,9 +67,6 @@ export const CaseStudyDetail: React.FC = () => {
     );
   }
 
-  const relatedStudies = getStoredCaseStudies()
-    .filter((c) => c.id !== study.id && c.isPublished)
-    .slice(0, 2);
 
   return (
     <main className="flex-1 bg-white font-sans pb-24">
