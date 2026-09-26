@@ -1,12 +1,12 @@
 const BLOB_KEY = 'data/blogs.json';
 
-async function readBlob(put, list) {
+async function readBlob(put, list, download) {
   try {
     const { blobs } = await list({ prefix: BLOB_KEY });
     if (!blobs.length) return [];
-    const res = await fetch(blobs[0].url);
-    if (!res.ok) return [];
-    return await res.json();
+    const { data } = await download(blobs[0].url);
+    const text = await data.text();
+    return JSON.parse(text);
   } catch {
     return [];
   }
@@ -14,7 +14,7 @@ async function readBlob(put, list) {
 
 async function writeBlob(put, data) {
   await put(BLOB_KEY, JSON.stringify(data), {
-    access: 'public',
+    access: 'private',
     contentType: 'application/json',
     addRandomSuffix: false,
   });
@@ -26,11 +26,12 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  let put, list;
+  let put, list, download;
   try {
     const blob = require('@vercel/blob');
     put = blob.put;
     list = blob.list;
+    download = blob.download;
   } catch (e) {
     return res.status(500).json({ error: 'blob_import_failed: ' + e.message });
   }
@@ -41,13 +42,13 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const blogs = await readBlob(put, list);
+      const blogs = await readBlob(put, list, download);
       return res.status(200).json(blogs);
     }
 
     if (req.method === 'POST') {
       const blog = req.body;
-      const all = await readBlob(put, list);
+      const all = await readBlob(put, list, download);
       const idx = all.findIndex((b) => b.id === blog.id);
       if (idx >= 0) all[idx] = blog;
       else all.unshift(blog);
@@ -57,7 +58,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'DELETE') {
       const { id } = req.body;
-      const all = (await readBlob(put, list)).filter((b) => b.id !== id);
+      const all = (await readBlob(put, list, download)).filter((b) => b.id !== id);
       await writeBlob(put, all);
       return res.status(200).json(all);
     }
