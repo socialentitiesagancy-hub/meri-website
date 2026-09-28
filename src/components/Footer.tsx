@@ -164,7 +164,7 @@ export const Footer: React.FC = () => {
 
         {/* Discreet Bottom Bar with Admin Portal Access */}
         <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-white/60 flex-wrap gap-4">
-          <p>© {new Date().getFullYear()} Social Entities Agency. All rights reserved.</p>
+          <p>© {__BUILD_YEAR__} Social Entities Agency · socialentities.com. All rights reserved.</p>
           <Link
             to="/admin-se-portal"
             className="hover:text-white transition-colors flex items-center gap-1.5 opacity-60 hover:opacity-100"

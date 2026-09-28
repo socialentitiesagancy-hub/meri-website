@@ -7,7 +7,7 @@ export const ServicesHero: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         {/* Left Column: Typography */}
         <div className="lg:col-span-5 flex flex-col justify-center">
-          <h1 className="text-[#5B6A50] font-extrabold text-[42px] sm:text-[60px] lg:text-[72px] tracking-tight leading-none mb-6 uppercase">
+          <h1 className="text-[#5B6A50] font-extrabold text-[36px] sm:text-[52px] lg:text-[36px] xl:text-[44px] tracking-tight leading-none mb-6 uppercase">
             Digital Marketing &amp; IT Services
           </h1>
           <p className="text-[#1C2740] font-bold text-[18px] sm:text-[22px] lg:text-[24px] leading-[1.45] tracking-tight max-w-[520px]">

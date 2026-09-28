@@ -6,6 +6,10 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    // Fixed at build time so prerendered HTML and the hydrating client always print the same year.
+    define: {
+      __BUILD_YEAR__: JSON.stringify(new Date().getFullYear()),
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

@@ -15,8 +15,11 @@ export const HeroContent: React.FC = () => {
       </h1>
 
       {/* Subheading Paragraph */}
-      <p className="text-fluid-p font-[700] text-[#111E38] mb-8 sm:mb-10 max-w-[580px]">
+      <p className="text-fluid-p font-[700] text-[#111E38] mb-3 sm:mb-4 max-w-[580px]">
         At our digital agency, we blend creativity, strategy, and technology to build impactful digital experiences that drive real results.
+      </p>
+      <p className="text-[14px] sm:text-[15px] font-semibold text-[#5B6A50] mb-8 sm:mb-10 max-w-[580px]">
+        Based in Lahore, Pakistan — working with businesses in Pakistan, the USA and the UK.
       </p>
 
       {/* Explore Button */}

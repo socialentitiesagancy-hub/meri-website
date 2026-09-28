@@ -142,13 +142,16 @@ const routes = [
     lastmod: toW3cDate(c.publishedDate),
   })),
   // Any unmatched path renders the NotFound view; Vercel serves this file with status 404.
-  { url: '/__not-found', file: path.join(distDir, '404.html'), sitemap: false },
+  { url: '/__not-found', file: path.join(distDir, '404.html') },
 ];
 
 const longTitles = [];
 
-for (const { url, data = {}, file = outputFile(url) } of routes) {
+for (const route of routes) {
+  const { url, data = {}, file = outputFile(url) } = route;
   const { head, body } = splitHead(render(url, data));
+  const robots = (head.match(/<meta name="robots" content="([^"]*)"/) || [])[1] ?? '';
+  if (robots.includes('noindex')) route.sitemap = false;
   const dataScript = Object.keys(data).length
     ? `<script>window.__INITIAL_DATA__=${serialize(data)}</script>`
     : '';

@@ -2,11 +2,42 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Seo, clipDescription } from '../components/Seo';
 import { NotFound } from './NotFound';
-import { ArrowLeft, MapPin, Globe, CheckCircle2, Phone, Mail, ArrowRight } from 'lucide-react';
+import {
+  BRAND_EMAIL,
+  BRAND_LOGO,
+  BRAND_NAME,
+  BRAND_PHONE_DISPLAY,
+  BRAND_PHONE_TEL,
+  BRAND_WHATSAPP_URL,
+  OFFICE_ADDRESS_TEXT,
+  ORG_ID,
+  SITE_URL,
+  postalAddress,
+  toJsonLd,
+} from '../data/brand';
+
+const officeJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfessionalService',
+  '@id': `${SITE_URL}locations/pakistan#office`,
+  name: BRAND_NAME,
+  url: `${SITE_URL}locations/pakistan`,
+  image: BRAND_LOGO,
+  telephone: BRAND_PHONE_DISPLAY,
+  email: BRAND_EMAIL,
+  address: postalAddress,
+  parentOrganization: { '@id': ORG_ID },
+};
+import { ArrowLeft, MapPin, Globe, CheckCircle2, Phone, Mail, ArrowRight, MessageCircle } from 'lucide-react';
 
 interface LocationInfo {
   name: string;
-  seoName?: string;
+  seoTitle: string;
+  heading: string;
+  // Markets served remotely with no local office; hidden from search until they have unique content.
+  noindex?: boolean;
+  // Name used in remote-service wording, e.g. "the USA".
+  market?: string;
   country: string;
   tagline: string;
   overview: string;
@@ -18,11 +49,12 @@ interface LocationInfo {
 export const locationDirectory: Record<string, LocationInfo> = {
   pakistan: {
     name: 'Pakistan (Lahore HQ)',
-    seoName: 'Pakistan',
+    seoTitle: 'Digital Marketing Agency in Lahore | Social Entities',
+    heading: 'Digital Marketing & IT Solutions in Pakistan (Lahore HQ)',
     country: 'Pakistan',
     tagline: 'The creative and technical epicenter of Social Entities.',
     overview: 'Our primary headquarters in Lahore houses our full creative production studio, engineering team, and media buying war room. We service premier Pakistani enterprises and high-growth consumer brands nationwide.',
-    headOffice: '50-N Gurumangat Rd, Block N, Gulberg 2, Lahore, Punjab, Pakistan',
+    headOffice: OFFICE_ADDRESS_TEXT,
     services: [
       { title: 'Full-Service Digital Strategy', desc: 'Omnichannel creative and media execution for top Pakistani retail, lifestyle, and corporate enterprises.' },
       { title: 'Local E-Commerce Scaling', desc: 'Shopify development and Cash-on-Delivery (COD) / digital payment optimization for high-velocity stores.' },
@@ -32,7 +64,10 @@ export const locationDirectory: Record<string, LocationInfo> = {
   },
   uae: {
     name: 'United Arab Emirates (Dubai)',
-    seoName: 'Dubai, UAE',
+    seoTitle: 'Digital Marketing for UAE Businesses | Social Entities',
+    heading: 'Digital Marketing & IT Solutions for Businesses in the UAE',
+    market: 'the UAE',
+    noindex: true,
     country: 'United Arab Emirates',
     tagline: 'High-performance growth marketing in the Middle East’s business capital.',
     overview: 'From luxury real estate to cutting-edge tech startups and hospitality brands in Dubai and Abu Dhabi, Social Entities delivers premium multilingual digital campaigns tailored to the GCC market.',
@@ -45,7 +80,10 @@ export const locationDirectory: Record<string, LocationInfo> = {
   },
   uk: {
     name: 'United Kingdom (London)',
-    seoName: 'London, UK',
+    seoTitle: 'Digital Marketing for UK Businesses | Social Entities',
+    heading: 'Digital Marketing & IT Solutions for Businesses in the UK',
+    market: 'the UK',
+    noindex: true,
     country: 'United Kingdom',
     tagline: 'Data-driven marketing and IT solutions for UK and European brands.',
     overview: 'Serving forward-thinking enterprises across London and the UK, we provide comprehensive Search Engine Optimization (SEO/GEO), performance advertising, and custom software development.',
@@ -58,7 +96,10 @@ export const locationDirectory: Record<string, LocationInfo> = {
   },
   usa: {
     name: 'United States (North America)',
-    seoName: 'the USA',
+    seoTitle: 'Digital Marketing for US Businesses | Social Entities',
+    heading: 'Digital Marketing & IT Solutions for Businesses in the USA',
+    market: 'the USA',
+    noindex: true,
     country: 'United States',
     tagline: 'Scalable paid acquisition and creative excellence in the world’s largest market.',
     overview: 'We partner with US-based e-commerce brands, SaaS companies, and digital innovators to build resilient customer acquisition systems with proven return on ad spend (ROAS).',
@@ -71,7 +112,10 @@ export const locationDirectory: Record<string, LocationInfo> = {
   },
   australia: {
     name: 'Australia (Sydney & Melbourne)',
-    seoName: 'Australia',
+    seoTitle: 'Digital Marketing for Australian Brands | Social Entities',
+    heading: 'Digital Marketing & IT Solutions for Businesses in Australia',
+    market: 'Australia',
+    noindex: true,
     country: 'Australia',
     tagline: 'Empowering Australian businesses with global creative talent and technical expertise.',
     overview: 'We support Australian innovators across retail, professional services, and technology with modern digital experiences, search domination, and paid social campaigns.',
@@ -84,7 +128,10 @@ export const locationDirectory: Record<string, LocationInfo> = {
   },
   europe: {
     name: 'Europe & International',
-    seoName: 'Europe',
+    seoTitle: 'Digital Marketing for European Businesses | Social Entities',
+    heading: 'Digital Marketing & IT Solutions for Businesses in Europe',
+    market: 'Europe',
+    noindex: true,
     country: 'Europe',
     tagline: 'Pan-European digital campaigns and multi-market localization.',
     overview: 'We orchestrate multi-territory digital expansion across the European continent, blending localized messaging, technical SEO, and multilingual creative assets.',
@@ -103,12 +150,15 @@ export const LocationDetail: React.FC = () => {
   const location =
     locationId && Object.hasOwn(locationDirectory, locationId) ? locationDirectory[locationId] : undefined;
   if (!location) return <NotFound />;
+  const isOffice = Boolean(location.headOffice);
+  const market = location.market ?? location.country;
 
   return (
     <main className="flex-1 bg-white font-sans pt-8 sm:pt-12 pb-20 sm:pb-28 px-4 sm:px-6 lg:px-12 max-w-[1380px] mx-auto w-full select-none">
       <Seo
-        title={`Digital Marketing Agency in ${location.seoName ?? location.name} | Social Entities`}
+        title={location.seoTitle}
         description={clipDescription(location.overview)}
+        noindex={location.noindex ? 'follow' : undefined}
       />
 
       {/* Breadcrumb Navigation */}
@@ -130,23 +180,51 @@ export const LocationDetail: React.FC = () => {
       <div className="mb-14 max-w-4xl">
         <div className="inline-flex items-center gap-2 bg-[#5B6A50]/10 text-[#5B6A50] font-bold px-4 py-1.5 rounded-full text-xs sm:text-sm mb-5 uppercase tracking-wider">
           <MapPin className="w-4 h-4" />
-          <span>Regional Presence • {location.country}</span>
+          <span>{isOffice ? `Regional Presence • ${location.country}` : `Serving Clients in ${market}`}</span>
         </div>
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#0F1A34] tracking-tight leading-[1.1] mb-5">
-          Digital Marketing & IT Solutions in {location.name}
+          {location.heading}
         </h1>
         <p className="text-lg sm:text-xl font-semibold text-[#5B6A50] mb-4">
           {location.tagline}
         </p>
         <p className="text-base sm:text-lg text-stone-600 leading-relaxed mb-8">
           {location.overview}
+          {!isOffice && ` We work with businesses in ${market} remotely from our Lahore office.`}
         </p>
 
         {/* Head Office Highlight if exists */}
         {location.headOffice && (
           <div className="bg-stone-50 p-5 rounded-2xl border border-stone-200 mb-8 max-w-2xl">
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toJsonLd(officeJsonLd) }} />
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#5B6A50] mb-1">Office Location</h4>
-            <p className="text-sm sm:text-base font-semibold text-[#0F1A34]">{location.headOffice}</p>
+            <address className="not-italic text-sm sm:text-base font-semibold text-[#0F1A34]">{location.headOffice}</address>
+            <div className="mt-3 flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1.5 text-sm font-semibold">
+              <a href={`tel:${BRAND_PHONE_TEL}`} className="inline-flex items-center gap-1.5 text-[#0F1A34] hover:text-[#5B6A50]">
+                <Phone className="w-4 h-4 text-[#5B6A50]" />
+                <span>{BRAND_PHONE_DISPLAY}</span>
+              </a>
+              <a
+                href={BRAND_WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[#0F1A34] hover:text-[#5B6A50]"
+              >
+                <MessageCircle className="w-4 h-4 text-[#5B6A50]" />
+                <span>WhatsApp</span>
+              </a>
+              <a href={`mailto:${BRAND_EMAIL}`} className="inline-flex items-center gap-1.5 text-[#0F1A34] hover:text-[#5B6A50]">
+                <Mail className="w-4 h-4 text-[#5B6A50]" />
+                <span>{BRAND_EMAIL}</span>
+              </a>
+            </div>
+            <iframe
+              title="Social Entities office on Google Maps"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(location.headOffice)}&output=embed`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="mt-4 w-full h-56 sm:h-64 rounded-xl border border-stone-200"
+            />
           </div>
         )}
 
@@ -156,7 +234,7 @@ export const LocationDetail: React.FC = () => {
             to="/contact"
             className="bg-[#5B6A50] hover:bg-[#4e5c44] text-white px-8 py-3.5 sm:py-4 rounded-full font-bold text-[15px] sm:text-[16px] inline-flex items-center gap-3 transition-all shadow-sm group hover:scale-102 active:scale-98"
           >
-            <span>Start Project in {location.country}</span>
+            <span>{isOffice ? `Start Project in ${location.country}` : 'Start Your Project'}</span>
             <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
           </Link>
           <a
@@ -173,7 +251,7 @@ export const LocationDetail: React.FC = () => {
       {/* Services in this Location */}
       <section className="mb-16 sm:mb-20">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0F1A34] tracking-tight mb-8">
-          Core Capabilities in {location.country}
+          {isOffice ? `Core Capabilities in ${location.country}` : `Core Capabilities for Clients in ${market}`}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {location.services.map((item, idx) => (
@@ -199,7 +277,9 @@ export const LocationDetail: React.FC = () => {
 
       {/* Market Strengths */}
       <section className="mb-16 bg-[#5B6A50] text-white p-8 sm:p-12 rounded-3xl">
-        <h3 className="text-2xl sm:text-3xl font-black mb-6">Why Partner with Social Entities in {location.country}?</h3>
+        <h3 className="text-2xl sm:text-3xl font-black mb-6">{isOffice
+            ? `Why Partner with Social Entities in ${location.country}?`
+            : `Why Clients in ${market} Choose Social Entities`}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {location.marketStrengths.map((str, idx) => (
             <div key={idx} className="flex items-start gap-3 bg-white/10 p-5 rounded-2xl border border-white/15">
@@ -222,7 +302,7 @@ export const LocationDetail: React.FC = () => {
           to="/contact"
           className="bg-[#5B6A50] hover:bg-[#4e5c44] text-white px-8 py-3.5 rounded-full font-bold text-[16px] inline-flex items-center gap-2 shadow-xs transition-all hover:scale-105"
         >
-          <span>Contact Our Regional Lead</span>
+          <span>Talk to Our Team</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>

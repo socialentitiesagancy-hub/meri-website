@@ -8,7 +8,8 @@ interface SeoProps {
   title: string;
   description?: string;
   canonical?: string;
-  noindex?: boolean;
+  /** true: "noindex, nofollow"; 'follow': "noindex, follow" (keep link equity flowing from thin pages). */
+  noindex?: boolean | 'follow';
 }
 
 export function clipDescription(text: string, max = 160): string {
@@ -41,7 +42,13 @@ export const Seo: React.FC<SeoProps> = ({ title, description, canonical, noindex
       {description && <meta name="description" content={description} />}
       <meta
         name="robots"
-        content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'}
+        content={
+          noindex === 'follow'
+            ? 'noindex, follow'
+            : noindex
+              ? 'noindex, nofollow'
+              : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+        }
       />
       {!noindex && <link rel="canonical" href={url} />}
       <meta property="og:title" content={title} />
