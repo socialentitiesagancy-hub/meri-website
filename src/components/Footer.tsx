@@ -39,7 +39,7 @@ export const Footer: React.FC = () => {
             </div>
             <ul className="space-y-2.5 sm:space-y-3 text-white text-[14px] sm:text-[16px] font-medium flex flex-col">
               <Link to="/case-studies" className="hover:opacity-80 transition-opacity font-bold underline decoration-white/40 underline-offset-4">Case Studies & Results</Link>
-              <Link to="/blogs" className="hover:opacity-80 transition-opacity font-bold underline decoration-white/40 underline-offset-4">LinkedIn Blogs & Articles</Link>
+              <Link to="/blog" className="hover:opacity-80 transition-opacity font-bold underline decoration-white/40 underline-offset-4">LinkedIn Blogs & Articles</Link>
               <Link to="/services/marketing-consultation" className="hover:opacity-80 transition-opacity">Marketing Consultation</Link>
               <Link to="/services/digital-marketing" className="hover:opacity-80 transition-opacity">Digital Marketing</Link>
               <Link to="/services/search-engine-optimization" className="hover:opacity-80 transition-opacity">Search Engine Optimization</Link>

@@ -1,9 +1,12 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Seo, clipDescription } from '../components/Seo';
+import { NotFound } from './NotFound';
 import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles, Layers, ShieldCheck, Zap, HelpCircle } from 'lucide-react';
 
 interface ServiceDetailData {
   title: string;
+  seoName?: string;
   tagline: string;
   description: string;
   tags: string[];
@@ -13,7 +16,7 @@ interface ServiceDetailData {
   faqs: { q: string; a: string }[];
 }
 
-const serviceDirectory: Record<string, ServiceDetailData> = {
+export const serviceDirectory: Record<string, ServiceDetailData> = {
   'marketing-consultation': {
     title: 'Marketing Consultation',
     tagline: 'Strategic vision and actionable roadmaps to unlock sustainable brand growth.',
@@ -64,6 +67,7 @@ const serviceDirectory: Record<string, ServiceDetailData> = {
   },
   'search-engine-optimization': {
     title: 'Search Engine Optimization (SEO / AEO / GEO)',
+    seoName: 'SEO, AEO & GEO',
     tagline: 'Rank #1 on traditional search engines, AI search engines, and generative answer models.',
     description:
       'Modern search extends beyond standard Google algorithms. We optimize your brand for Search Engine Optimization (SEO), Answer Engine Optimization (AEO), and Generative Engine Optimization (GEO) like ChatGPT, Perplexity, and Google Gemini.',
@@ -112,6 +116,7 @@ const serviceDirectory: Record<string, ServiceDetailData> = {
   },
   'content-creation': {
     title: 'Content Creation & Video Production',
+    seoName: 'Content & Video Production',
     tagline: 'Viral short-form reels, high-engagement scripting, and studio-grade multimedia production.',
     description:
       'In a feed-driven digital world, attention is currency. We produce scroll-stopping visual content, short-form video reels, studio photo shoots, and compelling narrative scripts that turn casual viewers into loyal brand advocates.',
@@ -136,6 +141,7 @@ const serviceDirectory: Record<string, ServiceDetailData> = {
   },
   'graphic-designing': {
     title: 'Graphics Designing & Visual Identity',
+    seoName: 'Graphic Design & Visual Identity',
     tagline: 'Timeless brand identities, iconic logos, and captivating digital design systems.',
     description:
       'We craft bespoke visual identities that communicate authority and elegance. From cohesive design guidelines and vector logo marks to high-converting packaging and social media design systems, our work leaves an indelible impression.',
@@ -160,6 +166,7 @@ const serviceDirectory: Record<string, ServiceDetailData> = {
   },
   'influencer-marketing': {
     title: 'Influencer Marketing & Creator Partnerships',
+    seoName: 'Influencer Marketing',
     tagline: 'Authentic creator collaborations that build cultural relevance and generate explosive sales.',
     description:
       'We connect your brand with vetted creators, influencers, and industry thought-leaders across Pakistan, UAE, UK, USA, and Europe. We manage end-to-end outreach, contracts, creative briefs, and ROI tracking to maximize social proof.',
@@ -184,6 +191,7 @@ const serviceDirectory: Record<string, ServiceDetailData> = {
   },
   'e-commerce': {
     title: 'E-Commerce Solutions & Store Scaling',
+    seoName: 'E-Commerce Solutions',
     tagline: 'End-to-end e-commerce store design, development, and conversion optimization.',
     description:
       'We build, manage, and scale high-velocity online stores on Shopify, WooCommerce, and custom headless architectures. From frictionless checkouts to inventory integrations and average order value (AOV) boosters, we turn visitors into buyers.',
@@ -208,6 +216,7 @@ const serviceDirectory: Record<string, ServiceDetailData> = {
   },
   'it-solutions': {
     title: 'IT Solutions & Custom Software Engineering',
+    seoName: 'IT & Custom Software',
     tagline: 'Robust web applications, mobile apps, and scalable digital infrastructure.',
     description:
       'From modern responsive web applications and native mobile apps to AI integrations and enterprise automation software, our engineering team builds fast, secure, and future-proof digital solutions.',
@@ -235,32 +244,17 @@ const serviceDirectory: Record<string, ServiceDetailData> = {
 export const ServiceDetail: React.FC = () => {
   const { serviceId } = useParams<{ serviceId: string }>();
 
-  const currentSlug = serviceId || 'marketing-consultation';
-  const service = serviceDirectory[currentSlug] || {
-    title: currentSlug.replace(/-/g, ' ').toUpperCase(),
-    tagline: 'Professional digital solutions engineered to elevate your brand.',
-    description: 'Social Entities offers end-to-end digital capabilities designed to accelerate your growth and establish market leadership.',
-    tags: ['Digital Solutions', 'Strategy', 'Execution'],
-    deliverables: [
-      { title: 'Strategic Roadmap', desc: 'Comprehensive blueprint aligning deliverables with your core business KPIs.' },
-      { title: 'Expert Execution', desc: 'Hands-on implementation leveraging cutting-edge tools and methodologies.' },
-      { title: 'Measurable ROI', desc: 'Transparent reporting and continuous optimization based on real performance data.' },
-    ],
-    process: [
-      { step: '01', title: 'Discovery', desc: 'Understanding your unique goals, competitors, and operational requirements.' },
-      { step: '02', title: 'Architecture', desc: 'Drafting the tailored execution framework.' },
-      { step: '03', title: 'Deployment', desc: 'Launching the strategy with precision.' },
-      { step: '04', title: 'Optimization', desc: 'Ongoing iterations to maximize long-term return.' },
-    ],
-    technologies: ['Google Analytics', 'Meta Business Suite', 'Figma', 'TypeScript'],
-    faqs: [
-      { q: 'How do we get started?', a: 'Simply reach out via our contact form or WhatsApp to schedule an introductory consultation with our strategy leads.' },
-    ],
-  };
+  const service =
+    serviceId && Object.hasOwn(serviceDirectory, serviceId) ? serviceDirectory[serviceId] : undefined;
+  if (!service) return <NotFound />;
 
   return (
     <main className="flex-1 bg-white font-sans pt-8 sm:pt-12 pb-20 sm:pb-28 px-4 sm:px-6 lg:px-12 max-w-[1380px] mx-auto w-full select-none">
-      
+      <Seo
+        title={`${service.seoName ?? service.title} Services | Social Entities`}
+        description={clipDescription(service.description)}
+      />
+
       {/* Top Breadcrumb Navigation */}
       <div className="flex items-center justify-between mb-8 pb-4 border-b border-stone-200/70">
         <Link

@@ -1,9 +1,12 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Seo, clipDescription } from '../components/Seo';
+import { NotFound } from './NotFound';
 import { ArrowLeft, MapPin, Globe, CheckCircle2, Phone, Mail, ArrowRight } from 'lucide-react';
 
 interface LocationInfo {
   name: string;
+  seoName?: string;
   country: string;
   tagline: string;
   overview: string;
@@ -12,9 +15,10 @@ interface LocationInfo {
   marketStrengths: string[];
 }
 
-const locationDirectory: Record<string, LocationInfo> = {
+export const locationDirectory: Record<string, LocationInfo> = {
   pakistan: {
     name: 'Pakistan (Lahore HQ)',
+    seoName: 'Pakistan',
     country: 'Pakistan',
     tagline: 'The creative and technical epicenter of Social Entities.',
     overview: 'Our primary headquarters in Lahore houses our full creative production studio, engineering team, and media buying war room. We service premier Pakistani enterprises and high-growth consumer brands nationwide.',
@@ -28,6 +32,7 @@ const locationDirectory: Record<string, LocationInfo> = {
   },
   uae: {
     name: 'United Arab Emirates (Dubai)',
+    seoName: 'Dubai, UAE',
     country: 'United Arab Emirates',
     tagline: 'High-performance growth marketing in the Middle East’s business capital.',
     overview: 'From luxury real estate to cutting-edge tech startups and hospitality brands in Dubai and Abu Dhabi, Social Entities delivers premium multilingual digital campaigns tailored to the GCC market.',
@@ -40,6 +45,7 @@ const locationDirectory: Record<string, LocationInfo> = {
   },
   uk: {
     name: 'United Kingdom (London)',
+    seoName: 'London, UK',
     country: 'United Kingdom',
     tagline: 'Data-driven marketing and IT solutions for UK and European brands.',
     overview: 'Serving forward-thinking enterprises across London and the UK, we provide comprehensive Search Engine Optimization (SEO/GEO), performance advertising, and custom software development.',
@@ -52,6 +58,7 @@ const locationDirectory: Record<string, LocationInfo> = {
   },
   usa: {
     name: 'United States (North America)',
+    seoName: 'the USA',
     country: 'United States',
     tagline: 'Scalable paid acquisition and creative excellence in the world’s largest market.',
     overview: 'We partner with US-based e-commerce brands, SaaS companies, and digital innovators to build resilient customer acquisition systems with proven return on ad spend (ROAS).',
@@ -64,6 +71,7 @@ const locationDirectory: Record<string, LocationInfo> = {
   },
   australia: {
     name: 'Australia (Sydney & Melbourne)',
+    seoName: 'Australia',
     country: 'Australia',
     tagline: 'Empowering Australian businesses with global creative talent and technical expertise.',
     overview: 'We support Australian innovators across retail, professional services, and technology with modern digital experiences, search domination, and paid social campaigns.',
@@ -76,6 +84,7 @@ const locationDirectory: Record<string, LocationInfo> = {
   },
   europe: {
     name: 'Europe & International',
+    seoName: 'Europe',
     country: 'Europe',
     tagline: 'Pan-European digital campaigns and multi-market localization.',
     overview: 'We orchestrate multi-territory digital expansion across the European continent, blending localized messaging, technical SEO, and multilingual creative assets.',
@@ -91,23 +100,17 @@ const locationDirectory: Record<string, LocationInfo> = {
 export const LocationDetail: React.FC = () => {
   const { locationId } = useParams<{ locationId: string }>();
 
-  const normalizedKey = locationId ? locationId.toLowerCase().trim() : 'pakistan';
-  const location = locationDirectory[normalizedKey] || {
-    name: locationId ? locationId.charAt(0).toUpperCase() + locationId.slice(1) : 'Global Location',
-    country: locationId || 'Global',
-    tagline: 'Expanding brand potential with strategy, creativity, and technology.',
-    overview: `Social Entities provides full-service digital agency capabilities to brands and innovators operating in ${locationId}.`,
-    services: [
-      { title: 'Digital Marketing & Strategy', desc: 'Tailored campaigns designed to capture market share and drive verified ROI.' },
-      { title: 'SEO & Content Creation', desc: 'Dominating search presence and captivating audiences with studio-grade creative.' },
-      { title: 'IT & Software Solutions', desc: 'Custom web and mobile app development engineered for performance.' },
-    ],
-    marketStrengths: ['Global Strategic Standard', 'Dedicated Account Leads', 'End-to-End Execution'],
-  };
+  const location =
+    locationId && Object.hasOwn(locationDirectory, locationId) ? locationDirectory[locationId] : undefined;
+  if (!location) return <NotFound />;
 
   return (
     <main className="flex-1 bg-white font-sans pt-8 sm:pt-12 pb-20 sm:pb-28 px-4 sm:px-6 lg:px-12 max-w-[1380px] mx-auto w-full select-none">
-      
+      <Seo
+        title={`Digital Marketing Agency in ${location.seoName ?? location.name} | Social Entities`}
+        description={clipDescription(location.overview)}
+      />
+
       {/* Breadcrumb Navigation */}
       <div className="flex items-center justify-between mb-8 pb-4 border-b border-stone-200/70">
         <Link

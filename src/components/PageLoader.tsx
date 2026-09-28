@@ -49,9 +49,9 @@ export const PageLoader: React.FC<PageLoaderProps> = ({ onComplete }) => {
 
         {/* Elegant Typography */}
         <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-[0.2em] text-[#2C3725] font-sans uppercase">
+          <div className="text-2xl sm:text-3xl font-bold tracking-[0.2em] text-[#2C3725] font-sans uppercase">
             Social Entities
-          </h1>
+          </div>
           <p className="text-[11px] sm:text-[12px] font-semibold text-[#6B7960] tracking-[0.3em] uppercase">
             Digital Agency
           </p>

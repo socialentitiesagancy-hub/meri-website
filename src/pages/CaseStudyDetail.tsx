@@ -13,12 +13,20 @@ import {
 } from 'lucide-react';
 import { CaseStudy } from '../types/caseStudy';
 import { getCaseStudyBySlug, getStoredCaseStudies } from '../services/caseStudyStorage';
+import { Seo, clipDescription, fitTitle } from '../components/Seo';
+import { getInitialData } from '../services/initialData';
+import { NotFound } from './NotFound';
 
 export const CaseStudyDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const [study, setStudy] = useState<CaseStudy | null>(null);
-  const [relatedStudies, setRelatedStudies] = useState<CaseStudy[]>([]);
+  const [initialStudies] = useState<CaseStudy[]>(() => getInitialData().caseStudies ?? []);
+  const [study, setStudy] = useState<CaseStudy | null>(
+    () => initialStudies.find((c) => c.isPublished && c.slug.toLowerCase() === slug?.toLowerCase()) ?? null
+  );
+  const [relatedStudies, setRelatedStudies] = useState<CaseStudy[]>(() =>
+    study ? initialStudies.filter((c) => c.id !== study.id && c.isPublished).slice(0, 2) : []
+  );
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -29,16 +37,11 @@ export const CaseStudyDetail: React.FC = () => {
             setRelatedStudies(all.filter((c) => c.id !== current.id && c.isPublished).slice(0, 2));
           });
         };
-        if (found) {
+        if (found && found.isPublished) {
           setStudy(found);
           loadRelated(found);
         } else {
-          getStoredCaseStudies().then((all) => {
-            if (all.length > 0) {
-              setStudy(all[0]);
-              setRelatedStudies(all.slice(1, 3).filter((c) => c.isPublished));
-            }
-          });
+          setStudy(null);
         }
       });
     }
@@ -52,24 +55,17 @@ export const CaseStudyDetail: React.FC = () => {
     }
   };
 
-  if (!study) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
-        <h2 className="text-2xl font-black text-[#0F1A34] mb-3">Case Study Not Found</h2>
-        <p className="text-sm text-stone-500 mb-6">The requested case study could not be loaded.</p>
-        <Link
-          to="/case-studies"
-          className="bg-[#5B6A50] text-white px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider"
-        >
-          &larr; View All Case Studies
-        </Link>
-      </div>
-    );
-  }
+  // Must match the prerendered 404.html markup, which Vercel serves for case studies published after the last deploy.
+  if (!study) return <NotFound />;
 
 
   return (
     <main className="flex-1 bg-white font-sans pb-24">
+      <Seo
+        title={fitTitle(study.title, [' | Case Study | Social Entities', ' | Social Entities'])}
+        description={clipDescription(study.summary)}
+        canonical={`/case-studies/${study.slug}`}
+      />
       {/* Top Breadcrumb Bar */}
       <div className="border-b border-stone-200 bg-stone-50/70 py-4 px-4 sm:px-6 lg:px-12">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">

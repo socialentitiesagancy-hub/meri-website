@@ -74,7 +74,7 @@ export async function getCaseStudyBySlug(slug: string): Promise<CaseStudy | unde
 
 export async function clearAllCaseStudies(): Promise<CaseStudy[]> {
   const all = await getStoredCaseStudies();
-  await Promise.all(all.map((c) => deleteCaseStudy(c.id)));
+  for (const c of all) await deleteCaseStudy(c.id);
   lsSet([]);
   return [];
 }

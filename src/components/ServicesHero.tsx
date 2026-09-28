@@ -8,7 +8,7 @@ export const ServicesHero: React.FC = () => {
         {/* Left Column: Typography */}
         <div className="lg:col-span-5 flex flex-col justify-center">
           <h1 className="text-[#5B6A50] font-extrabold text-[42px] sm:text-[60px] lg:text-[72px] tracking-tight leading-none mb-6 uppercase">
-            SERVICES
+            Digital Marketing &amp; IT Services
           </h1>
           <p className="text-[#1C2740] font-bold text-[18px] sm:text-[22px] lg:text-[24px] leading-[1.45] tracking-tight max-w-[520px]">
             From strategy and SEO to content, design, and IT solutions — we offer everything your brand needs to grow, digitally and beyond.

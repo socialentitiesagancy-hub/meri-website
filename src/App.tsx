@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Seo } from './components/Seo';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { PageLoader } from './components/PageLoader';
@@ -14,6 +15,7 @@ import { CaseStudies } from './pages/CaseStudies';
 import { CaseStudyDetail } from './pages/CaseStudyDetail';
 import { Blogs } from './pages/Blogs';
 import { AdminPortal } from './pages/admin/AdminPortal';
+import { NotFound } from './pages/NotFound';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -34,7 +36,7 @@ function AppContent() {
     location.pathname.startsWith('/admin-se-portal') ||
     location.pathname.startsWith('/admin-portal') ||
     location.pathname.startsWith('/admin') ||
-    window.location.hash.includes('admin');
+    (typeof window !== 'undefined' && window.location.hash.includes('admin'));
 
   const isAdminRoute = isAdminPath || isAdminParam;
 
@@ -53,6 +55,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-[#596A4E]/20 flex flex-col justify-between overflow-x-hidden">
       <ScrollToTop />
+      {isAdminRoute && <Seo title="Admin Portal | Social Entities" noindex />}
       {/* Branded Social Entities Initial Loader */}
       {isLoading && !isAdminRoute && (
         <PageLoader
@@ -65,14 +68,36 @@ function AppContent() {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/about" element={<main className="flex-1"><AboutUs /></main>} />
+        <Route
+          path="/about"
+          element={
+            <main className="flex-1">
+              <Seo
+                title="About Social Entities Agency | Our Team & Approach"
+                description="Meet Social Entities Agency: a team of digital innovators, designers, strategists and developers creating impactful, user-centric digital experiences."
+              />
+              <AboutUs />
+            </main>
+          }
+        />
         <Route path="/services" element={<ServicesIndex />} />
         <Route path="/services/:serviceId" element={<ServiceDetail />} />
         <Route path="/locations/:locationId" element={<LocationDetail />} />
-        <Route path="/contact" element={<main className="flex-1"><ContactUs /></main>} />
+        <Route
+          path="/contact"
+          element={
+            <main className="flex-1">
+              <Seo
+                title="Contact Social Entities | Book a Free Call"
+                description="Get in touch with Social Entities to discuss SEO, performance marketing, content, design or web development for your brand. Book a free call with our team."
+              />
+              <ContactUs />
+            </main>
+          }
+        />
         <Route path="/case-studies" element={<CaseStudies />} />
         <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
-        <Route path="/blogs" element={<Blogs />} />
+        <Route path="/blogs" element={<Navigate to="/blog" replace />} />
         <Route path="/blog" element={<Blogs />} />
         
         {/* Dedicated Admin Portal Routes */}
@@ -82,7 +107,7 @@ function AppContent() {
         <Route path="/admin/*" element={<AdminPortal />} />
         
         {/* Fallback route */}
-        <Route path="*" element={isAdminRoute ? <AdminPortal /> : <Home />} />
+        <Route path="*" element={isAdminRoute ? <AdminPortal /> : <NotFound />} />
       </Routes>
 
       {/* Footer Section - hidden in admin workspace */}
@@ -92,11 +117,7 @@ function AppContent() {
 }
 
 export default function App() {
-  return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
-  );
+  return <AppContent />;
 }
 
 

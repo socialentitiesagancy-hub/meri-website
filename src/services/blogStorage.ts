@@ -66,7 +66,7 @@ export async function toggleBlogPublishStatus(id: string): Promise<BlogPost[]> {
 
 export async function clearAllBlogs(): Promise<BlogPost[]> {
   const all = await getStoredBlogs();
-  await Promise.all(all.map((b) => deleteBlog(b.id)));
+  for (const b of all) await deleteBlog(b.id);
   lsSet([]);
   return [];
 }

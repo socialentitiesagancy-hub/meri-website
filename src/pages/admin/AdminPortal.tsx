@@ -678,7 +678,7 @@ export const AdminPortal: React.FC = () => {
             </button>
 
             <Link
-              to="/blogs"
+              to="/blog"
               target="_blank"
               className="hidden md:inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-[#536245] bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-xl transition-colors"
             >

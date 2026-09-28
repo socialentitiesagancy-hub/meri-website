@@ -12,9 +12,13 @@ import {
 } from 'lucide-react';
 import { BlogPost } from '../types/blog';
 import { getStoredBlogs } from '../services/blogStorage';
+import { Seo } from '../components/Seo';
+import { getInitialData } from '../services/initialData';
 
 export const Blogs: React.FC = () => {
-  const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const [blogs, setBlogs] = useState<BlogPost[]>(
+    () => (getInitialData().blogs ?? []).filter((b) => b.isPublished)
+  );
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
   useEffect(() => {
@@ -39,6 +43,11 @@ export const Blogs: React.FC = () => {
 
   return (
     <main className="flex-1 bg-white font-sans pt-8 sm:pt-12 pb-20 sm:pb-28 px-4 sm:px-6 lg:px-12 max-w-[1400px] mx-auto w-full">
+      <Seo
+        title="Marketing Insights & Growth Articles | Social Entities"
+        description="Actionable frameworks, media buying breakdowns and algorithm updates from the Social Entities growth team. Read our latest marketing insights on LinkedIn."
+        canonical="/blog"
+      />
       {/* Hero Header */}
       <div className="max-w-3xl mb-12 sm:mb-16">
         <div className="inline-flex items-center gap-2 bg-[#536245]/10 text-[#536245] font-bold px-4 py-1.5 rounded-full text-xs sm:text-sm uppercase tracking-wider mb-4">

@@ -12,7 +12,7 @@ export const Navbar: React.FC = () => {
     { name: 'Home', href: '/', active: location.pathname === '/' },
     { name: 'Services', href: '/services', active: location.pathname.startsWith('/services') },
     { name: 'Case Studies', href: '/case-studies', active: location.pathname.startsWith('/case-studies') },
-    { name: 'Blogs', href: '/blogs', active: location.pathname.startsWith('/blog') },
+    { name: 'Blogs', href: '/blog', active: location.pathname.startsWith('/blog') },
     { name: 'About Us', href: '/about', active: location.pathname === '/about' },
     { name: 'Contact Us', href: '/contact', active: location.pathname === '/contact' },
   ];

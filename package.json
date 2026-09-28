@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "dev:api": "vercel dev --listen 3001",
-    "build": "vite build",
+    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs",
     "preview": "vite preview --port=3000 --host=0.0.0.0",
     "lint": "tsc --noEmit",
     "compress-images": "node scripts/compress-images.mjs"
@@ -24,6 +24,7 @@
     "nodemailer": "^10.0.10",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.18.2",
     "vite": "^6.2.3"
   },

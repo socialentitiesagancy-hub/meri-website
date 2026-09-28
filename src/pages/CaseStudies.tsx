@@ -3,9 +3,13 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, TrendingUp, Sparkles, Filter, ExternalLink, Lock, CheckCircle2 } from 'lucide-react';
 import { CaseStudy } from '../types/caseStudy';
 import { getStoredCaseStudies } from '../services/caseStudyStorage';
+import { Seo } from '../components/Seo';
+import { getInitialData } from '../services/initialData';
 
 export const CaseStudies: React.FC = () => {
-  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
+  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>(
+    () => (getInitialData().caseStudies ?? []).filter((c) => c.isPublished)
+  );
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
   useEffect(() => {
@@ -30,6 +34,10 @@ export const CaseStudies: React.FC = () => {
 
   return (
     <main className="flex-1 bg-white font-sans pt-8 sm:pt-12 pb-20 sm:pb-28 px-4 sm:px-6 lg:px-12 max-w-[1400px] mx-auto w-full">
+      <Seo
+        title="Case Studies & Client Results | Social Entities"
+        description="See how Social Entities accelerates revenue, scales media buying and engineers custom software for high-growth brands. Browse our client case studies."
+      />
       {/* Hero Header */}
       <div className="max-w-3xl mb-12 sm:mb-16">
         <div className="inline-flex items-center gap-2 bg-[#5B6A50]/10 text-[#5B6A50] font-bold px-4 py-1.5 rounded-full text-xs sm:text-sm uppercase tracking-wider mb-4">

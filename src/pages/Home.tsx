@@ -6,10 +6,16 @@ import { Achievements } from '../components/Achievements';
 import { Services } from '../components/Services';
 import { Clients } from '../components/Clients';
 import { WorkingProcess } from '../components/WorkingProcess';
+import { Seo } from '../components/Seo';
 
 export const Home: React.FC = () => {
   return (
     <main className="flex-1">
+      <Seo
+        title="Social Entities | SEO, Performance Marketing & Web Agency"
+        description="Social Entities Agency helps brands grow with SEO and AEO, performance marketing, content, UI/UX design and web development. See our work and book a free call."
+        canonical="/"
+      />
       <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-12 flex items-center" id="home">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-8 items-center w-full">
           {/* Left Column: Typography Copy */}
