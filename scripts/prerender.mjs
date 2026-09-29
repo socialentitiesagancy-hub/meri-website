@@ -7,10 +7,27 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(root, 'dist');
 const ssrEntry = path.join(root, 'dist-ssr', 'entry-server.js');
 
+// Local dev convenience: load .env.local only when the token isn't already in the environment
+// (on Vercel the token comes from the build environment, and .env.local does not exist).
 if (!process.env.BLOB_READ_WRITE_TOKEN) {
   try {
     process.loadEnvFile(path.join(root, '.env.local'));
   } catch {}
+}
+
+// Safe diagnostic: report presence and length ONLY — never print the token value.
+// Listing env var names matching /BLOB|TOKEN/ surfaces a misnamed or wrong-scoped variable.
+{
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const matchingNames = Object.keys(process.env)
+    .filter((k) => /BLOB|TOKEN/i.test(k))
+    .sort();
+  console.log(
+    `[prerender] BLOB_READ_WRITE_TOKEN present=${Boolean(token)}` +
+      (token ? ` length=${token.length}` : '') +
+      `; VERCEL=${process.env.VERCEL ?? '(unset)'} VERCEL_ENV=${process.env.VERCEL_ENV ?? '(unset)'}` +
+      `; env names matching /BLOB|TOKEN/i: ${matchingNames.join(', ') || '(none)'}`
+  );
 }
 
 const MAX_TITLE = 60;
