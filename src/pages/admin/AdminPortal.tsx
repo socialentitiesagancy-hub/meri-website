@@ -679,7 +679,7 @@ export const AdminPortal: React.FC = () => {
             className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-stone-200 p-7 sm:p-8 animate-in fade-in zoom-in-95 duration-200"
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-100">
+              <div className="w-12 h-12 rounded-2xl bg-[#5B6A50]/10 text-[#5B6A50] flex items-center justify-center shrink-0 border border-[#5B6A50]/20">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div className="min-w-0">
@@ -705,7 +705,7 @@ export const AdminPortal: React.FC = () => {
                 type="button"
                 onClick={runConfirm}
                 disabled={confirmLoading}
-                className="px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide text-white bg-red-600 hover:bg-red-700 inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-70 disabled:cursor-wait"
+                className="px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide text-white bg-[#5B6A50] hover:bg-[#4d5c43] inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-70 disabled:cursor-wait"
               >
                 {confirmLoading ? (
                   <>
