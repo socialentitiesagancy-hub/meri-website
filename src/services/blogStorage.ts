@@ -2,7 +2,7 @@ import { BlogPost } from '../types/blog';
 
 const API = '/api/blogs';
 const LS_KEY = 'se_blogs_cache';
-export const MAX_BLOGS = 50;
+export const MAX_BLOGS = 6;
 
 function lsGet(): BlogPost[] {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }

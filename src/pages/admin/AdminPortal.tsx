@@ -281,6 +281,10 @@ export const AdminPortal: React.FC = () => {
   // BLOGS CRM HANDLERS (Card Elements + LinkedIn)
   // ==========================================
   const handleStartCreateBlog = () => {
+    if (blogs.length >= MAX_BLOGS) {
+      alert(`Maximum limit of ${MAX_BLOGS} blogs reached.`);
+      return;
+    }
     setEditingBlogId(null);
     setBlogTitle('');
     setBlogCategory(BLOG_CATEGORIES[0]);
@@ -765,7 +769,7 @@ export const AdminPortal: React.FC = () => {
               }`}
             >
               <Share2 className="w-3.5 h-3.5" />
-              <span>Blogs & Articles ({blogs.length})</span>
+              <span>Blogs & Articles ({blogs.length}/{MAX_BLOGS})</span>
             </button>
             <button
               type="button"
@@ -1067,10 +1071,10 @@ export const AdminPortal: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-2xs">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-stone-500">Total Blog Cards</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-stone-500">Blog Cards Quota</span>
                       <Share2 className="w-4 h-4 text-[#536245]" />
                     </div>
-                    <span className="text-3xl font-black text-[#0F1A34]">{blogs.length}</span>
+                    <span className="text-3xl font-black text-[#0F1A34]">{blogs.length} / {MAX_BLOGS}</span>
                   </div>
 
                   <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-2xs">
@@ -1090,8 +1094,9 @@ export const AdminPortal: React.FC = () => {
                     </div>
                     <button
                       type="button"
+                      disabled={blogs.length >= MAX_BLOGS}
                       onClick={handleStartCreateBlog}
-                      className="bg-white text-[#536245] hover:bg-stone-100 font-bold text-xs py-2.5 px-4 rounded-xl inline-flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                      className="bg-white text-[#536245] hover:bg-stone-100 font-bold text-xs py-2.5 px-4 rounded-xl inline-flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Add Blog</span>
@@ -1122,8 +1127,9 @@ export const AdminPortal: React.FC = () => {
                     </button>
                     <button
                       type="button"
+                      disabled={blogs.length >= MAX_BLOGS}
                       onClick={handleStartCreateBlog}
-                      className="bg-[#536245] hover:bg-[#445138] text-white px-5 py-2.5 rounded-xl font-bold text-xs inline-flex items-center gap-2 shadow-xs cursor-pointer"
+                      className="bg-[#536245] hover:bg-[#445138] text-white px-5 py-2.5 rounded-xl font-bold text-xs inline-flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Add Blog Card</span>
