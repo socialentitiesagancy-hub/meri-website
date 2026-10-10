@@ -28,7 +28,8 @@ import {
   Share2,
   BookOpen,
   ArrowUpRight,
-  Mail
+  Mail,
+  Loader2
 } from 'lucide-react';
 import { CaseStudy } from '../../types/caseStudy';
 import { BlogPost } from '../../types/blog';
@@ -141,6 +142,40 @@ export const AdminPortal: React.FC = () => {
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
 
   const [notification, setNotification] = useState<string>('');
+
+  // Custom themed confirmation dialog (replaces window.confirm for destructive actions)
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    loadingLabel: string;
+    onConfirm: () => Promise<void>;
+  } | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const askConfirm = (opts: {
+    title: string;
+    message: string;
+    confirmLabel: string;
+    loadingLabel: string;
+    onConfirm: () => Promise<void>;
+  }) => {
+    setConfirmDialog(opts);
+  };
+
+  const runConfirm = async () => {
+    if (!confirmDialog) return;
+    setConfirmLoading(true);
+    try {
+      await confirmDialog.onConfirm();
+      setConfirmDialog(null);
+    } catch (err) {
+      console.error('Delete action failed:', err);
+      showToast('Something went wrong. Please try again.');
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
 
   // Check existing signed session cookie
   useEffect(() => {
@@ -319,15 +354,21 @@ export const AdminPortal: React.FC = () => {
     showToast(editingBlogId ? 'Blog card updated!' : 'New LinkedIn blog card published!');
   };
 
-  const handleDeleteBlog = async (id: string, titleStr: string) => {
-    if (window.confirm(`Permanently delete blog "${titleStr}"? This will remove it completely and it will not stay in your code base.`)) {
-      await deleteBlog(id);
-      setBlogs(await getStoredBlogs());
-      if (isEditingBlog && editingBlogId === id) {
-        setIsEditingBlog(false);
-      }
-      showToast('Blog card permanently deleted.');
-    }
+  const handleDeleteBlog = (id: string, titleStr: string) => {
+    askConfirm({
+      title: 'Delete this blog card?',
+      message: `"${titleStr}" will be permanently removed from your website and will not stay in your code base. This action cannot be undone.`,
+      confirmLabel: 'Delete Blog',
+      loadingLabel: 'Deleting…',
+      onConfirm: async () => {
+        await deleteBlog(id);
+        setBlogs(await getStoredBlogs());
+        if (isEditingBlog && editingBlogId === id) {
+          setIsEditingBlog(false);
+        }
+        showToast('Blog card permanently deleted.');
+      },
+    });
   };
 
   const handleToggleBlogPublish = async (id: string) => {
@@ -336,15 +377,21 @@ export const AdminPortal: React.FC = () => {
     showToast('Blog status updated.');
   };
 
-  const handleClearAllBlogs = async () => {
-    if (window.confirm('Permanently clear all blogs and reset to scratch (0 blogs)? Nothing will stay in your code base.')) {
-      await clearAllBlogs();
-      setBlogs([]);
-      if (isEditingBlog) {
-        setIsEditingBlog(false);
-      }
-      showToast('All blogs permanently cleared.');
-    }
+  const handleClearAllBlogs = () => {
+    askConfirm({
+      title: 'Clear all blog cards?',
+      message: 'Every blog card will be permanently removed and the list reset to scratch (0 blogs). Nothing will stay in your code base. This cannot be undone.',
+      confirmLabel: 'Clear All Blogs',
+      loadingLabel: 'Clearing…',
+      onConfirm: async () => {
+        await clearAllBlogs();
+        setBlogs([]);
+        if (isEditingBlog) {
+          setIsEditingBlog(false);
+        }
+        showToast('All blogs permanently cleared.');
+      },
+    });
   };
 
   const handleDownloadZipFile = async () => {
@@ -458,26 +505,38 @@ export const AdminPortal: React.FC = () => {
     showToast(editingCaseId ? 'Case study updated!' : 'Case study published!');
   };
 
-  const handleDeleteCaseStudy = async (id: string, titleStr: string) => {
-    if (window.confirm(`Permanently delete case study "${titleStr}"? This cannot be undone.`)) {
-      await deleteCaseStudy(id);
-      setCaseStudies(await getStoredCaseStudies());
-      if (isEditingCase && editingCaseId === id) {
-        setIsEditingCase(false);
-      }
-      showToast('Case study permanently deleted.');
-    }
+  const handleDeleteCaseStudy = (id: string, titleStr: string) => {
+    askConfirm({
+      title: 'Delete this case study?',
+      message: `"${titleStr}" will be permanently removed from your website. This action cannot be undone.`,
+      confirmLabel: 'Delete Case Study',
+      loadingLabel: 'Deleting…',
+      onConfirm: async () => {
+        await deleteCaseStudy(id);
+        setCaseStudies(await getStoredCaseStudies());
+        if (isEditingCase && editingCaseId === id) {
+          setIsEditingCase(false);
+        }
+        showToast('Case study permanently deleted.');
+      },
+    });
   };
 
-  const handleClearAllCaseStudies = async () => {
-    if (window.confirm('Permanently delete all case studies and reset to 0 from scratch?')) {
-      await clearAllCaseStudies();
-      setCaseStudies([]);
-      if (isEditingCase) {
-        setIsEditingCase(false);
-      }
-      showToast('All case studies permanently cleared.');
-    }
+  const handleClearAllCaseStudies = () => {
+    askConfirm({
+      title: 'Clear all case studies?',
+      message: 'Every case study will be permanently deleted and the list reset to 0 from scratch. This cannot be undone.',
+      confirmLabel: 'Clear All Cases',
+      loadingLabel: 'Clearing…',
+      onConfirm: async () => {
+        await clearAllCaseStudies();
+        setCaseStudies([]);
+        if (isEditingCase) {
+          setIsEditingCase(false);
+        }
+        showToast('All case studies permanently cleared.');
+      },
+    });
   };
 
   // 1. Render Login Screen
@@ -603,6 +662,68 @@ export const AdminPortal: React.FC = () => {
   // 2. Render Main Admin Dashboard
   return (
     <main className="min-h-screen bg-stone-50 font-sans pb-20">
+      {/* Themed Delete Confirmation Modal */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-[#0F1A34]/50 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => {
+              if (!confirmLoading) setConfirmDialog(null);
+            }}
+          />
+          {/* Card */}
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-stone-200 p-7 sm:p-8 animate-in fade-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-100">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-lg font-black text-[#0F1A34] tracking-tight">
+                  {confirmDialog.title}
+                </h3>
+                <p className="mt-1.5 text-sm text-stone-600 leading-relaxed">
+                  {confirmDialog.message}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-7 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+                disabled={confirmLoading}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-stone-600 hover:bg-stone-100 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={runConfirm}
+                disabled={confirmLoading}
+                className="px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide text-white bg-red-600 hover:bg-red-700 inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-70 disabled:cursor-wait"
+              >
+                {confirmLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{confirmDialog.loadingLabel}</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>{confirmDialog.confirmLabel}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast Notification */}
       {notification && (
         <div className="fixed top-6 right-6 z-50 bg-[#0F1A34] text-white px-5 py-3 rounded-2xl shadow-2xl border border-stone-700 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-200">
